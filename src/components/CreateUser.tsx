@@ -1,12 +1,6 @@
 import { ChangeEvent, FormEvent, useState } from "react";
-
-type CreateUserDto = {
-  name: string;
-  email: string;
-  phone: string;
-  position: string;
-  file: File | null;
-};
+import { createUser, getToken } from "../services/apiUtils";
+import { CreateUserDto } from "../types/createUserDto";
 
 function CreateUserComponent() {
   const [formData, setFormData] = useState<CreateUserDto>({
@@ -45,17 +39,19 @@ function CreateUserComponent() {
   const formSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const formDataToSend = new FormData();
-    formDataToSend.append("name", formData.name);
-    formDataToSend.append("email", formData.email);
-    formDataToSend.append("phone", formData.phone);
-    formDataToSend.append("position", formData.position);
+    const token = await getToken();
+
+    const data = new FormData();
+    data.append("name", formData.name);
+    data.append("email", formData.email);
+    data.append("phone", formData.phone);
+    data.append("position", formData.position);
     if (formData.file) {
-      formDataToSend.append("file", formData.file);
+      data.append("file", formData.file);
     }
 
-    console.log({ formData });
-    console.log({ formDataToSend });
+    const createUserResponse = await createUser(data, token);
+    console.log({ createUserResponse });
   };
 
   return (
