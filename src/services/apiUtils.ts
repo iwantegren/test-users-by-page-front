@@ -8,21 +8,26 @@ export async function getToken() {
   return data.token;
 }
 
-export async function createUser(data: FormData, token: string) {
+export async function createUser(body: FormData, token: string) {
   const response = await fetch(`${config.backendUrl}/users`, {
     method: "POST",
     headers: {
       token,
     },
-    body: data,
+    body,
   });
 
-  console.log({ response });
+  const result = await response.json();
 
   if (response.ok) {
-    const result = await response.json();
-    return result;
+    return {
+      status: response.status,
+      data: result,
+    };
   } else {
-    throw new Error("Failed to submit form");
+    return {
+      status: response.status,
+      error: result,
+    };
   }
 }

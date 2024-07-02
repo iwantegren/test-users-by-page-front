@@ -7,17 +7,15 @@ function CreateUserComponent() {
     name: "",
     email: "",
     phone: "",
-    position: "",
+    position_id: "0",
     file: null,
   });
 
+  const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [formSuccess, setFormSuccess] = useState<string>("");
+
   const formChanged = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
-
-    console.log({ name });
-    console.log({ value });
-    console.log({ files });
-
     setFormData((prevData) => ({
       ...prevData,
       [name]: files ? files[0] : value,
@@ -26,10 +24,6 @@ function CreateUserComponent() {
 
   const formSelectChanged = (e: ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
-
-    console.log({ name });
-    console.log({ value });
-
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -45,13 +39,34 @@ function CreateUserComponent() {
     data.append("name", formData.name);
     data.append("email", formData.email);
     data.append("phone", formData.phone);
-    data.append("position", formData.position);
+    data.append("position_id", formData.position_id);
     if (formData.file) {
       data.append("file", formData.file);
     }
 
-    const createUserResponse = await createUser(data, token);
-    console.log({ createUserResponse });
+    try {
+      const result = await createUser(data, token);
+
+      if (result.status === 201) {
+        setFormErrors([]);
+        setFormSuccess("User created successfully");
+        setTimeout(() => {
+          setFormSuccess("");
+        }, 3000);
+      } else if (result.status === 400) {
+        const msg = result.error.message;
+        setFormErrors(Array.isArray(msg) ? msg : [msg]);
+      } else if (result.status === 409) {
+        const msg = result.error.message;
+        setFormErrors(Array.isArray(msg) ? msg : [msg]);
+      } else {
+        alert(`Failed to create user\nError ${result.status}: ${result.error}`);
+      }
+
+      console.log({ result });
+    } catch (error) {
+      alert(`Failed to submit form: ${error}`);
+    }
   };
 
   return (
@@ -98,11 +113,11 @@ function CreateUserComponent() {
             <select
               className="form-control"
               id="formPosition"
-              name="position"
-              value={formData.position}
+              name="position_id"
+              value={formData.position_id}
               onChange={formSelectChanged}
             >
-              <option>Select a position...</option>
+              <option>Select a position_id...</option>
               <option value="1">Job1</option>
               <option value="2">Job2</option>
               <option value="3">Job3</option>
@@ -118,10 +133,28 @@ function CreateUserComponent() {
               onChange={formChanged}
             />
           </div>
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="btn btn-primary mb-3">
             Create user
           </button>
         </form>
+        {formSuccess && (
+          <div className="alert alert-success" role="alert">
+            {formSuccess}
+          </div>
+        )}
+        {formErrors.length > 0 && (
+          <div>
+            {formErrors.map((err, index) => (
+              <div
+                className="alert alert-danger"
+                role="alert"
+                id={index.toString()}
+              >
+                {err}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
