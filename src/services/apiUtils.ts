@@ -1,4 +1,5 @@
 import config from "../config";
+import { PositionDto } from "../types/positionDto";
 
 export async function getToken() {
   const response = await fetch(`${config.backendUrl}/token`, {
@@ -29,5 +30,18 @@ export async function createUser(body: FormData, token: string) {
       status: response.status,
       error: result,
     };
+  }
+}
+
+export async function getPositions(): Promise<PositionDto[]> {
+  const response = await fetch(`${config.backendUrl}/positions`, {
+    method: "GET",
+  });
+
+  if (response.ok) {
+    const result = await response.json();
+    return result.positions;
+  } else {
+    throw new Error("Failed to fetch positions");
   }
 }

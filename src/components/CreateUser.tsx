@@ -1,6 +1,7 @@
-import { ChangeEvent, FormEvent, useState } from "react";
-import { createUser, getToken } from "../services/apiUtils";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { createUser, getPositions, getToken } from "../services/apiUtils";
 import { CreateUserDto } from "../types/createUserDto";
+import { PositionDto } from "../types/positionDto";
 
 function CreateUserComponent() {
   const [formData, setFormData] = useState<CreateUserDto>({
@@ -13,6 +14,19 @@ function CreateUserComponent() {
 
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [formSuccess, setFormSuccess] = useState<string>("");
+  const [positions, setPositions] = useState<PositionDto[]>([]);
+
+  useEffect(() => {
+    async function fetchPositions() {
+      try {
+        setPositions(await getPositions());
+      } catch (error) {
+        console.error("Error fetching positions:", error);
+      }
+    }
+
+    fetchPositions();
+  }, []);
 
   const formChanged = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
@@ -33,22 +47,21 @@ function CreateUserComponent() {
   const formSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
+    setFormErrors([]);
+
     const token = await getToken();
 
     const data = new FormData();
     data.append("name", formData.name);
     data.append("email", formData.email);
     data.append("phone", formData.phone);
-    data.append("position_id", formData.position_id);
-    if (formData.file) {
-      data.append("file", formData.file);
-    }
+    formData.position_id && data.append("position_id", formData.position_id);
+    formData.file && data.append("file", formData.file);
 
     try {
       const result = await createUser(data, token);
 
       if (result.status === 201) {
-        setFormErrors([]);
         setFormSuccess("User created successfully");
         setTimeout(() => {
           setFormSuccess("");
@@ -117,10 +130,12 @@ function CreateUserComponent() {
               value={formData.position_id}
               onChange={formSelectChanged}
             >
-              <option>Select a position_id...</option>
-              <option value="1">Job1</option>
-              <option value="2">Job2</option>
-              <option value="3">Job3</option>
+              <option value="">Select a position...</option>
+              {positions.map((pos) => (
+                <option key={pos.id} value={pos.id}>
+                  {pos.name}
+                </option>
+              ))}
             </select>
           </div>
           <div className="form-group mb-3">
@@ -145,11 +160,7 @@ function CreateUserComponent() {
         {formErrors.length > 0 && (
           <div>
             {formErrors.map((err, index) => (
-              <div
-                className="alert alert-danger"
-                role="alert"
-                id={index.toString()}
-              >
+              <div className="alert alert-danger" role="alert" key={index}>
                 {err}
               </div>
             ))}
