@@ -1,25 +1,68 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserComponent } from "./User";
+import { ReadUserDto } from "../types/readUserDto";
+import { createPageLink, getUsers } from "../services/apiUtils";
 
 function UsersPageComponent() {
   const [prevPage, setPrevPage] = useState<string | null>(null);
   const [nextPage, setNextPage] = useState<string | null>("url");
 
-  const users = [
-    { id: 1, name: "Ivan" },
-    { id: 2, name: "Eva" },
-    { id: 3, name: "Ira" },
-    { id: 4, name: "Igor" },
-  ];
+  const [error, setError] = useState("");
 
-  const clickPrevPage = (_e: React.MouseEvent<HTMLButtonElement>) => {
-    setNextPage("url");
-    setPrevPage(null);
+  const [pages, setPages] = useState<number[]>([1]);
+  const count = 5;
+
+  const [users, setUsers] = useState<ReadUserDto[]>([]);
+
+  const loadUsers = async (link: string) => {
+    try {
+      const result = await getUsers(link);
+      setUsers(result.users);
+      setNextPage(result.links.next_url);
+      setPrevPage(result.links.prev_url);
+      setPages([result.page]);
+    } catch (error) {
+      setError(JSON.stringify(error));
+    }
+  };
+
+  const appendUsers = async (link: string) => {
+    try {
+      const result = await getUsers(link);
+      setUsers((prevUsers) => [...prevUsers, ...result.users]);
+      setNextPage(result.links.next_url);
+      setPages((prevPages) => [...prevPages, result.page]);
+    } catch (error) {
+      setError(JSON.stringify(error));
+    }
+  };
+
+  useEffect(() => {
+    loadUsers(createPageLink(pages[pages.length - 1], count));
+  }, []);
+
+  const clickPrevPage = async (_e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!prevPage) {
+      console.error(`Wrong prevPage: ${prevPage}`);
+      return;
+    }
+    loadUsers(prevPage);
   };
 
   const clickNextPage = (_e: React.MouseEvent<HTMLButtonElement>) => {
-    setPrevPage("url");
-    setNextPage(null);
+    if (!nextPage) {
+      console.error(`Wrong nextPage: ${nextPage}`);
+      return;
+    }
+    loadUsers(nextPage);
+  };
+
+  const clickShowMore = (_e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!nextPage) {
+      console.error(`Wrong nextPage: ${nextPage}`);
+      return;
+    }
+    appendUsers(nextPage);
   };
 
   return (
@@ -27,7 +70,7 @@ function UsersPageComponent() {
       <div className="card-header bg-secondary bg-gradient">List ot users</div>
       <div className="card-body">
         <button
-          className="btn btn-primary mx-3"
+          className="btn btn-primary"
           disabled={prevPage === null}
           onClick={clickPrevPage}
         >
@@ -40,11 +83,41 @@ function UsersPageComponent() {
         >
           Next
         </button>
+        {pages.length === 1 ? (
+          <h5 className="my-3">Page: {pages[pages.length - 1]}</h5>
+        ) : (
+          <h5 className="my-3">
+            Pages: {pages[0]}-{pages[pages.length - 1]}
+          </h5>
+        )}
+        <h5 className="my-3">Users on the page: {users.length}</h5>
         {users.map((user) => (
           <UserComponent key={user.id} user={user} />
         ))}
+        {pages.length === 1 ? (
+          <h5 className="my-3">Page: {pages[pages.length - 1]}</h5>
+        ) : (
+          <h5 className="my-3">
+            Pages: {pages[0]}-{pages[pages.length - 1]}
+          </h5>
+        )}
+        <h5 className="my-3">Users on the page: {users.length}</h5>
+        {error && (
+          <div className="alert alert-danger" role="alert">
+            {error}
+          </div>
+        )}
+        <div className="my-3">
+          <button
+            className="btn btn-primary"
+            disabled={nextPage === null}
+            onClick={clickShowMore}
+          >
+            Show more
+          </button>
+        </div>
         <button
-          className="btn btn-primary mx-3"
+          className="btn btn-primary"
           disabled={prevPage === null}
           onClick={clickPrevPage}
         >

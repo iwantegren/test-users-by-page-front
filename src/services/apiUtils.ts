@@ -45,3 +45,23 @@ export async function getPositions(): Promise<PositionDto[]> {
     throw new Error("Failed to fetch positions");
   }
 }
+
+export function createPageLink(page: number, count: number) {
+  return `${config.backendUrl}/users?page=${page}&count=${count}`;
+}
+
+export async function getUsers(link: string) {
+  const response = await fetch(link, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch users: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data;
+}

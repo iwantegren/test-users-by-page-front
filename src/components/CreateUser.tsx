@@ -15,13 +15,17 @@ function CreateUserComponent() {
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [formSuccess, setFormSuccess] = useState<string>("");
   const [positions, setPositions] = useState<PositionDto[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchPositions() {
       try {
+        setLoading(true);
         setPositions(await getPositions());
       } catch (error) {
         console.error("Error fetching positions:", error);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -48,6 +52,7 @@ function CreateUserComponent() {
     e.preventDefault();
 
     setFormErrors([]);
+    setLoading(true);
 
     const token = await getToken();
 
@@ -55,7 +60,8 @@ function CreateUserComponent() {
     data.append("name", formData.name);
     data.append("email", formData.email);
     data.append("phone", formData.phone);
-    formData.position_id && data.append("position_id", formData.position_id);
+    formData.position_id &&
+      data.append("position_id", formData.position_id as string);
     formData.file && data.append("file", formData.file);
 
     try {
@@ -73,12 +79,16 @@ function CreateUserComponent() {
         const msg = result.error.message;
         setFormErrors(Array.isArray(msg) ? msg : [msg]);
       } else {
-        alert(`Failed to create user\nError ${result.status}: ${result.error}`);
+        alert(
+          `Failed to create user\nError ${result.status}: ${JSON.stringify(
+            result.error
+          )}`
+        );
       }
-
-      console.log({ result });
     } catch (error) {
       alert(`Failed to submit form: ${error}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -148,8 +158,23 @@ function CreateUserComponent() {
               onChange={formChanged}
             />
           </div>
-          <button type="submit" className="btn btn-primary mb-3">
-            Create user
+          <button
+            className="btn btn-primary mb-3"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm mx-1"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                Loading...
+              </>
+            ) : (
+              <>Create User</>
+            )}
           </button>
         </form>
         {formSuccess && (

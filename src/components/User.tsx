@@ -1,27 +1,23 @@
-export function UserComponent({ user }) {
+import { ReadUserDto } from "../types/readUserDto";
+
+type UserProps = {
+  user: ReadUserDto;
+};
+
+export function UserComponent(props: UserProps) {
+  const { user } = props;
+
   return (
-    <div className="card my-3" /* style="width: 18rem;" */>
-      <img className="card-img-top" src="..." alt="Card image cap" />
+    <div className="card my-3">
+      <img className="card-img-top" src="..." alt="Profile photo" />
       <div className="card-body">
         <h5 className="card-title">{user.name}</h5>
-        <p className="card-text">
-          Some quick example text to build on the card title and make up the
-          bulk of the card's content.
-        </p>
+        <h6 className="card-text">{user.position}</h6>
       </div>
       <ul className="list-group list-group-flush">
-        <li className="list-group-item">Cras justo odio</li>
-        <li className="list-group-item">Dapibus ac facilisis in</li>
-        <li className="list-group-item">Vestibulum at eros</li>
+        <li className="list-group-item">email: {user.email}</li>
+        <li className="list-group-item">phone: {user.phone}</li>
       </ul>
-      <div className="card-body">
-        <a href="#" className="card-link">
-          Card link
-        </a>
-        <a href="#" className="card-link">
-          Another link
-        </a>
-      </div>
     </div>
   );
 }
