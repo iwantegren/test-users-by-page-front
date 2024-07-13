@@ -1,19 +1,17 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import CreateUserComponent from "./components/CreateUser";
 import UsersPageComponent from "./components/UsersPage";
-import config from "./config";
+import { ConfigBarComponent } from "./components/ConfigBar";
+import { useState } from "react";
 
 function App() {
+  const [usersKey, setUsersKey] = useState(0);
+
   return (
     <>
-      <div className="card">
-        <div className="card-header bg-secondary bg-gradient">System info</div>
-        <div className="card-body">
-          <h5>Connected to {config.backendUrl}</h5>
-        </div>
-      </div>
+      <ConfigBarComponent setUsersKey={setUsersKey} />
       <CreateUserComponent />
-      <UsersPageComponent />
+      <UsersPageComponent key={usersKey} />
     </>
   );
 }

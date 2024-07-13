@@ -14,8 +14,12 @@ function UsersPageComponent() {
 
   const [users, setUsers] = useState<ReadUserDto[]>([]);
 
+  const [loading, setLoading] = useState(false);
+
   const loadUsers = async (link: string) => {
     try {
+      setLoading(true);
+
       const result = await getUsers(link);
       setUsers(result.users);
       setNextPage(result.links.next_url);
@@ -23,17 +27,23 @@ function UsersPageComponent() {
       setPages([result.page]);
     } catch (error) {
       setError(JSON.stringify(error));
+    } finally {
+      setLoading(false);
     }
   };
 
   const appendUsers = async (link: string) => {
     try {
+      setLoading(true);
+
       const result = await getUsers(link);
       setUsers((prevUsers) => [...prevUsers, ...result.users]);
       setNextPage(result.links.next_url);
       setPages((prevPages) => [...prevPages, result.page]);
     } catch (error) {
       setError(JSON.stringify(error));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,14 +81,14 @@ function UsersPageComponent() {
       <div className="card-body">
         <button
           className="btn btn-primary"
-          disabled={prevPage === null}
+          disabled={loading || prevPage === null}
           onClick={clickPrevPage}
         >
           Prev
         </button>
         <button
           className="btn btn-primary mx-3"
-          disabled={nextPage === null}
+          disabled={loading || nextPage === null}
           onClick={clickNextPage}
         >
           Next
@@ -102,6 +112,11 @@ function UsersPageComponent() {
           </h5>
         )}
         <h5 className="my-3">Users on the page: {users.length}</h5>
+        {loading && (
+          <div className="alert alert-info" role="alert">
+            Loading...
+          </div>
+        )}
         {error && (
           <div className="alert alert-danger" role="alert">
             {error}
@@ -110,7 +125,7 @@ function UsersPageComponent() {
         <div className="my-3">
           <button
             className="btn btn-primary"
-            disabled={nextPage === null}
+            disabled={loading || nextPage === null}
             onClick={clickShowMore}
           >
             Show more
@@ -118,14 +133,14 @@ function UsersPageComponent() {
         </div>
         <button
           className="btn btn-primary"
-          disabled={prevPage === null}
+          disabled={loading || prevPage === null}
           onClick={clickPrevPage}
         >
           Prev
         </button>
         <button
           className="btn btn-primary mx-3"
-          disabled={nextPage === null}
+          disabled={loading || nextPage === null}
           onClick={clickNextPage}
         >
           Next
