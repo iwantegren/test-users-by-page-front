@@ -10,7 +10,7 @@ function UsersPageComponent() {
   const [error, setError] = useState("");
 
   const [pages, setPages] = useState<number[]>([1]);
-  const count = 5;
+  const count = 6;
 
   const [users, setUsers] = useState<ReadUserDto[]>([]);
 
